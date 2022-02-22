@@ -24,6 +24,7 @@ module "subscription_billing_role_assignments" {
     azuread_users              = local.combined_objects_azuread_users
     managed_identities         = local.combined_objects_managed_identities
     azuread_service_principals = local.combined_objects_azuread_service_principals
+    azuread_apps               = local.combined_objects_azuread_apps
   }
 }
 

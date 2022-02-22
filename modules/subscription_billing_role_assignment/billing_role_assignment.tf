@@ -1,9 +1,17 @@
 data "azurerm_billing_enrollment_account_scope" "sub" {
+  for_each = try(var.settings.enrollment_account_name, null) != null ? {"ea": "true"} : {}
   billing_account_name    = var.settings.billing_account_name
   enrollment_account_name = var.settings.enrollment_account_name
 }
 
-data "external" "role_definition" {
+data "azurerm_billing_mca_account_scope" "sub" {
+  for_each = try(var.settings.invoice_section_name, null) != null ? {"mca": "true"} : {}
+  billing_account_name = var.settings.billing_account_name
+  billing_profile_name = var.settings.billing_profile_name // eg. "PE2Q-NOIT-BG7-TGB" 
+  invoice_section_name = var.settings.invoice_section_name // eg. "MTT4-OBS7-PJA-TGB" 
+}
+
+/* data "external" "role_definition" {
   program = [
     "bash", "-c",
     "az rest --method GET --url ${var.cloud.resourceManager}${local.billing_scope_id}/billingRoleDefinitions?api-version=2019-10-01-preview --query \"value[?properties.roleName=='${var.billing_role_definition_name}'].{id:id}[0]\" -o json"
@@ -14,12 +22,14 @@ data "external" "role_definition" {
   #   --url https://management.azure.com${data.azurerm_billing_enrollment_account_scope.sub.id}/billingRoleDefinitions?api-version=2019-10-01-preview \
   #   --query "value[?properties.roleName=='${var.billing_role_definition_name}'].{id:id}[0]" -o json
 
-}
+} */
 
 locals {
-  billing_scope_id = data.azurerm_billing_enrollment_account_scope.sub.id
+  billing_scope_id = (try(var.settings.enrollment_account_name, null) != null ? 
+    data.azurerm_billing_enrollment_account_scope.sub["ea"].id :
+    data.azurerm_billing_mca_account_scope.sub["mca"].id)
 }
-
+/* 
 module "role_assignment_azuread_users" {
   source   = "./role_assignment"
   for_each = try(var.settings.principals.azuread_users, {})
@@ -61,4 +71,12 @@ module "role_assignment_azuread_service_principals" {
   settings             = each.value
   cloud                = var.cloud
 }
+ */
 
+resource "azurerm_role_assignment" "mca_role_assignment_azuread_apps" {
+  for_each   = try(var.settings.principals.azuread_apps, {})
+
+  scope                = local.billing_scope_id
+  role_definition_name = "Contributor"
+  principal_id         = var.principals.azuread_apps[try(each.value.lz_key, var.client_config.landingzone_key)][each.value.key].azuread_service_principal.id
+}
