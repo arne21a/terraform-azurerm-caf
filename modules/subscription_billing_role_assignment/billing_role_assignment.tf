@@ -80,3 +80,21 @@ resource "azurerm_role_assignment" "mca_role_assignment_azuread_apps" {
   role_definition_name = "Contributor"
   principal_id         = var.principals.azuread_apps[try(each.value.lz_key, var.client_config.landingzone_key)][each.value.key].azuread_service_principal.id
 }
+
+//Todo: Change variable structure. Replace logged_in_subscription and "key" = "caf_launchpad_level0"
+/* subscription_billing_role_assignments = {
+  logged_in_subscription = {
+    billing_role_definition_name = "string"
+    billing_account_name = "foo"
+    billing_profile_name = "bar"
+    invoice_section_name = "baz"
+    principals = {
+      azuread_apps = {
+        caf_launchpad_level0 = {
+          "key" = "caf_launchpad_level0"
+        }
+      }
+      
+    }
+  }
+} */
