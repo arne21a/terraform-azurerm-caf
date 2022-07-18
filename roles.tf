@@ -166,6 +166,7 @@ locals {
     wvd_applications                           = local.combined_objects_wvd_applications
     wvd_host_pools                             = local.combined_objects_wvd_host_pools
     wvd_workspaces                             = local.combined_objects_wvd_workspaces
+    virtual_machine_scale_sets                 = local.combined_objects_virtual_machine_scale_sets
     log_analytics                              = local.current_objects_log_analytics
     route_tables                               = local.combined_objects_route_tables
   }
