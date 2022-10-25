@@ -8,6 +8,9 @@ module "custom_roles" {
   assignable_scopes    = local.assignable_scopes[each.key]
 }
 
+output "custom_roles" {
+  value = module.custom_roles
+}
 #
 # Roles assignments
 #
@@ -21,7 +24,7 @@ resource "azurerm_role_assignment" "for" {
   }
 
   principal_id         = each.value.object_id_resource_type == "object_ids" ? each.value.object_id_key_resource : each.value.object_id_lz_key == null ? local.services_roles[each.value.object_id_resource_type][var.current_landingzone_key][each.value.object_id_key_resource].rbac_id : local.services_roles[each.value.object_id_resource_type][each.value.object_id_lz_key][each.value.object_id_key_resource].rbac_id
-  role_definition_id   = each.value.mode == "custom_role_mapping" ? module.custom_roles[each.value.role_definition_name].role_definition_resource_id : null
+  role_definition_id   = each.value.mode == "custom_role_mapping" ? try(module.custom_roles[each.value.role_definition_name].role_definition_resource_id, local.combined_objects_custom_roles[each.value.role_lz_key][each.value.role_definition_name].role_definition_resource_id) : null
   role_definition_name = each.value.mode == "built_in_role_mapping" ? each.value.role_definition_name : null
   scope                = each.value.scope_lz_key == null ? local.services_roles[each.value.scope_resource_key][var.current_landingzone_key][each.value.scope_key_resource].id : local.services_roles[each.value.scope_resource_key][each.value.scope_lz_key][each.value.scope_key_resource].id
 }
@@ -33,7 +36,7 @@ resource "azurerm_role_assignment" "for_deferred" {
   }
 
   principal_id         = each.value.object_id_resource_type == "object_ids" ? each.value.object_id_key_resource : each.value.object_id_lz_key == null ? local.services_roles_deferred[each.value.object_id_resource_type][var.current_landingzone_key][each.value.object_id_key_resource].rbac_id : local.services_roles_deferred[each.value.object_id_resource_type][each.value.object_id_lz_key][each.value.object_id_key_resource].rbac_id
-  role_definition_id   = each.value.mode == "custom_role_mapping" ? module.custom_roles[each.value.role_definition_name].role_definition_resource_id : null
+  role_definition_id   = each.value.mode == "custom_role_mapping" ? try(module.custom_roles[each.value.role_definition_name].role_definition_resource_id, local.combined_objects_custom_roles[each.value.role_lz_key][each.value.role_definition_name].role_definition_resource_id) : null
   role_definition_name = each.value.mode == "built_in_role_mapping" ? each.value.role_definition_name : null
   scope                = each.value.scope_lz_key == null ? local.services_roles_deferred[each.value.scope_resource_key][var.current_landingzone_key][each.value.scope_key_resource].id : local.services_roles_deferred[each.value.scope_resource_key][each.value.scope_lz_key][each.value.scope_key_resource].id
 }
@@ -99,10 +102,13 @@ locals {
   # Nested objects that must be processed after the services_roles
   services_roles_deferred = {
     storage_containers                         = local.combined_objects_storage_containers
+    azuread_service_principals                 = local.combined_objects_azuread_service_principals
+    azuread_groups                             = local.combined_objects_azuread_groups
   }
 
   services_roles = {
     automations                                = local.combined_objects_automations
+    shared_image_galleries                     = local.combined_objects_shared_image_galleries
     aks_clusters                               = local.combined_objects_aks_clusters
     aks_ingress_application_gateway_identities = local.aks_ingress_application_gateway_identities
     api_management                             = local.combined_objects_api_management
@@ -209,16 +215,17 @@ locals {
                     mode                    = key_mode                  #   "mode" = "built_in_role_mapping"
                     scope_resource_key      = key
                     scope_lz_key            = try(role_mapping.lz_key, null)
+                    role_lz_key             = try(resources.role_lz_key, null)
                     scope_key_resource      = scope_key_resource
                     role_definition_name    = role_definition_name
                     object_id_resource_type = object_id_key
                     object_id_key_resource  = object_id_key_resource #   "object_id_key_resource" = "aks_admins"
                     object_id_lz_key        = try(object_resources.lz_key, null)
                   }
-                ]
+                ] if object_id_key != "role_lz_key"
               ] if role_definition_name != "lz_key"
-            ]
-          ]
+            ] 
+          ] 
         ]
       ]
     ) : format("%s_%s_%s_%s", mapping.object_id_resource_type, mapping.scope_key_resource, replace(mapping.role_definition_name, " ", "_"), mapping.object_id_key_resource) => mapping

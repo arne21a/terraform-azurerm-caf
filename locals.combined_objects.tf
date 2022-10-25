@@ -2,6 +2,8 @@ locals {
   # CAF landing zones can retrieve remote objects from a different landing zone and the
   # combined_objects will merge it with the local objects
   combined_objects_aks_clusters                                   = merge(tomap({ (local.client_config.landingzone_key) = module.aks_clusters }), try(var.remote_objects.aks_clusters, {}))
+  combined_objects_custom_roles                                   = merge(tomap({ (local.client_config.landingzone_key) = module.custom_roles }), try(var.remote_objects.custom_roles, {}))
+  combined_objects_shared_image_galleries                         = merge(tomap({ (local.client_config.landingzone_key) = module.shared_image_galleries }), try(var.remote_objects.shared_image_galleries, {}))
   combined_objects_api_management                                 = merge(tomap({ (local.client_config.landingzone_key) = module.api_management }), try(var.remote_objects.api_management, {}))
   combined_objects_api_management_api                             = merge(tomap({ (local.client_config.landingzone_key) = module.api_management_api }), try(var.remote_objects.api_management_api, {}))
   combined_objects_api_management_api_operation                   = merge(tomap({ (local.client_config.landingzone_key) = module.api_management_api_operation }), try(var.remote_objects.api_management_api_operation, {}))
@@ -161,4 +163,7 @@ locals {
   )
 
 }
- 
+
+output "combined_objects_azuread_groups" {
+  value = local.combined_objects_azuread_groups
+}
