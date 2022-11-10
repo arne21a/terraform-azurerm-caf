@@ -101,12 +101,13 @@ module "event_hubs" {
   depends_on = [module.event_hub_namespaces]
   for_each   = try(var.event_hubs, {})
 
-  client_config       = local.client_config
-  global_settings     = local.global_settings
-  settings            = each.value
-  namespace_name      = module.event_hub_namespaces[each.value.event_hub_namespace_key].name
-  storage_account_id  = try(module.storage_accounts[each.value.storage_account_key].id, null)
-  resource_group_name = local.combined_objects_resource_groups[try(each.value.lz_key, local.client_config.landingzone_key)][try(each.value.resource_group_key, each.value.resource_group.key)].name
+  client_config      = local.client_config
+  global_settings    = local.global_settings
+  settings           = each.value
+  namespace_name     = module.event_hub_namespaces[each.value.event_hub_namespace_key].name
+  storage_account_id = try(module.storage_accounts[each.value.storage_account_key].id, null)
+  base_tags          = try(local.global_settings.inherit_tags, false) ? local.resource_groups[each.value.resource_group_key].tags : {}
+  resource_group     = local.combined_objects_resource_groups[try(each.value.lz_key, local.client_config.landingzone_key)][try(each.value.resource_group_key, each.value.resource_group.key)]
 }
 
 output "event_hubs" {
