@@ -56,25 +56,6 @@ resource "azuread_application" "app" {
       }
     }
   }
-
-  dynamic "web" {
-    for_each = try(var.settings.web, null) != null ? [var.settings.web] : []
-
-    content {
-      homepage_url  = can(var.settings.homepage) || can(web.value.homepage_url) ? try(var.settings.homepage, web.value.homepage_url) : null
-      logout_url    = can(var.settings.logout_url) || can(web.value.logout_url) ? try(var.settings.logout_url, web.value.logout_url) : null
-      redirect_uris = can(var.settings.reply_urls) || can(web.value.redirect_uris) ? try(var.settings.reply_urls, web.value.redirect_uris) : null
-
-      dynamic "implicit_grant" {
-        for_each = try(web.value.implicit_grant, null) != null ? [web.value.implicit_grant] : []
-
-        content {
-          access_token_issuance_enabled = can(var.settings.oauth2_allow_implicit_flow) || can(implicit_grant.value.access_token_issuance_enabled) ? try(var.settings.oauth2_allow_implicit_flow, implicit_grant.value.access_token_issuance_enabled) : null
-          id_token_issuance_enabled     = try(implicit_grant.value.access_token_issuance_enabled, null)
-        }
-      }
-    }
-  }
 }
 
 resource "azuread_service_principal" "app" {
