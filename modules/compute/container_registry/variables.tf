@@ -78,25 +78,3 @@ variable "base_tags" {
   description = "Base tags for the resource to be inherited from the resource group."
   type        = bool
 }
-variable "quarantine_policy_enabled" {
-  type = bool
-  default = false
-}
-
-variable "retention_policy" {
-  default = {}
-}
-
-variable "trust_policy" {
-  default = {}
-}
-
-variable "zone_redundancy_enabled" {
-  type = bool
-  default = false
-}
-
-variable "export_policy_enabled" {
-  type = bool
-  default = true
-}
