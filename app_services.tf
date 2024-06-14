@@ -49,3 +49,22 @@ resource "azurerm_app_service_virtual_network_swift_connection" "vnet_config" {
   app_service_id = module.app_services[each.key].id
   subnet_id      = local.combined_objects_networking[try(each.value.vnet_integration.lz_key, local.client_config.landingzone_key)][each.value.vnet_integration.vnet_key].subnets[each.value.vnet_integration.subnet_key].id
 }
+
+module "windows_web_apps" {
+  source     = "./modules/webapps/windows_web_app"
+  depends_on = [module.networking]
+  for_each   = local.webapp.windows_web_apps
+
+  name            = each.value.name
+  client_config   = local.client_config
+  service_plan_id = can(each.value.service_plan.service_plan_id) ? each.value.service_plan.service_plan_id : local.combined_objects_app_service_plans[try(each.value.service_plan.lz_key, local.client_config.landingzone_key)][each.value.service_plan.key].id
+  settings        = each.value
+  global_settings = local.global_settings
+
+
+  base_tags           = local.global_settings.inherit_tags
+  resource_group      = local.combined_objects_resource_groups[try(each.value.resource_group.lz_key, local.client_config.landingzone_key)][try(each.value.resource_group_key, each.value.resource_group.key)]
+  resource_group_name = can(each.value.resource_group.name) || can(each.value.resource_group_name) ? try(each.value.resource_group.name, each.value.resource_group_name) : null
+  location            = try(local.global_settings.regions[each.value.region], null)
+
+}

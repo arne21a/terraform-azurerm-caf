@@ -19,10 +19,10 @@ resource "azurerm_app_service" "app_service" {
   app_service_plan_id = var.app_service_plan_id
   tags                = merge(local.tags, try(var.settings.tags, {}))
 
-  client_affinity_enabled = lookup(var.settings, "client_affinity_enabled", null)
-  client_cert_enabled     = lookup(var.settings, "client_cert_enabled", null)
-  enabled                 = lookup(var.settings, "enabled", null)
-  https_only              = lookup(var.settings, "https_only", null)
+  client_affinity_enabled       = lookup(var.settings, "client_affinity_enabled", null)
+  client_cert_enabled           = lookup(var.settings, "client_cert_enabled", null)
+  enabled                       = lookup(var.settings, "enabled", null)
+  https_only                    = lookup(var.settings, "https_only", null)
 
   dynamic "identity" {
     for_each = try(var.identity, null) == null ? [] : [1]
